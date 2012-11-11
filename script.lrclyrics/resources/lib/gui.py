@@ -2,8 +2,7 @@ import sys
 import os
 import re
 import thread
-import xbmc
-import xbmcgui
+import xbmc, xbmcgui, xbmcvfs
 from threading import Timer
 from utilities import *
 
@@ -106,42 +105,30 @@ class GUI( xbmcgui.WindowXMLDialog ):
         self.show_lyrics( lyrics, True )
 
     def get_lyrics_from_file( self, artist, song ):
-        try:
-            xbmc.sleep( 60 )
-            if ( self.settings[ "artist_folder" ] ):
-                self.song_path = unicode( os.path.join( self.settings[ "lyrics_path" ], artist.replace( "\\", "_" ).replace( "/", "_" ), song.replace( "\\", "_" ).replace( "/", "_" ) + ".lrc" ), "utf-8" )
-            else:
-                self.song_path = unicode( os.path.join( self.settings[ "lyrics_path" ], artist.replace( "\\", "_" ).replace( "/", "_" ) + " - " + song.replace( "\\", "_" ).replace( "/", "_" ) + ".lrc" ), "utf-8" )
-            lyrics_file = open( self.song_path, "r" )
-            lyrics = lyrics_file.read()
-            lyrics_file.close()
-            return lyrics
-        except IOError:
-            return ""
+        xbmc.sleep( 60 )
+        if ( self.settings[ "artist_folder" ] ):
+            self.song_path = unicode( os.path.join( self.settings[ "lyrics_path" ], artist.replace( "\\", "_" ).replace( "/", "_" ), song.replace( "\\", "_" ).replace( "/", "_" ) + ".lrc" ), "utf-8" )
+        else:
+            self.song_path = unicode( os.path.join( self.settings[ "lyrics_path" ], artist.replace( "\\", "_" ).replace( "/", "_" ) + " - " + song.replace( "\\", "_" ).replace( "/", "_" ) + ".lrc" ), "utf-8" )
+        return get_textfile( self.song_path )
 
     def get_lyrics_from_file2( self ):
-        try:
-            xbmc.sleep( 60 )
-            path = xbmc.Player().getPlayingFile()
-            dirname = os.path.dirname(path)
-            basename = os.path.basename(path)
-            filename = basename.rsplit( ".", 1 )[ 0 ]
-            if ( self.settings[ "subfolder" ] ):
-                self.song_path = unicode( os.path.join( dirname, self.settings[ "subfolder_name" ], filename + ".lrc" ), "utf-8" )
-            else:
-                self.song_path = unicode( os.path.join( dirname, filename + ".lrc" ), "utf-8" )
-            lyrics_file = open( self.song_path, "r" )
-            lyrics = lyrics_file.read()
-            lyrics_file.close()
-            return lyrics
-        except IOError:
-            return ""
+        xbmc.sleep( 60 )
+        path = xbmc.Player().getPlayingFile()
+        dirname = os.path.dirname(path)
+        basename = os.path.basename(path)
+        filename = basename.rsplit( ".", 1 )[ 0 ]
+        if ( self.settings[ "subfolder" ] ):
+            self.song_path = unicode( os.path.join( dirname, self.settings[ "subfolder_name" ], filename + ".lrc" ), "utf-8" )
+        else:
+            self.song_path = unicode( os.path.join( dirname, filename + ".lrc" ), "utf-8" )
+        return get_textfile( self.song_path )
 
     def save_lyrics_to_file( self, lyrics ):
         try:
-            if ( not os.path.isdir( os.path.dirname( self.song_path ) ) ):
-                os.makedirs( os.path.dirname( self.song_path ) )
-            lyrics_file = open( self.song_path, "w" )
+            if ( not xbmcvfs.exists( os.path.dirname( self.song_path ) ) ):
+                xbmcvfs.mkdirs( os.path.dirname( self.song_path ) )
+            lyrics_file = xbmcvfs.File( self.song_path, "w" )
             lyrics_file.write( lyrics )
             lyrics_file.close()
             return True
