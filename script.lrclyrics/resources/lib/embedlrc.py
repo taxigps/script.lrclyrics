@@ -110,6 +110,16 @@ def getID3Lyrics(filename):
                 content=content[pos+5:]
             return lyrics.encode( "utf-8")
         elif tag.fid == "TXXX":
-            if (tag.rawdata[:6] == "Lyrics"):
-                return tag.rawdata[7:]
+            enc = ['latin_1','utf_16','utf_16_be','utf_8'][ord(tag.rawdata[0])]
+            raw = tag.rawdata[1:]
+            utf16 = bool(enc.find('16') != -1)
+            pos = endOfString(raw, utf16)
+            name = raw[:pos].decode(enc)
+            if utf16:
+                pos += 1
+            if (len(name) == 6 and name.lower() == "lyrics"):
+                lyrics = raw[pos+1:]
+                if (enc == 'latin_1'):
+                    enc = chardet.detect(lyrics)['encoding']
+                return lyrics.decode(enc).encode( "utf-8")
     return None
