@@ -1,6 +1,7 @@
 import os
 import chardet
 from tagger import *
+import xbmcvfs
 
 def getEmbedLyrics(filename):
     lyrics = getLyrics3(filename)
@@ -20,7 +21,7 @@ See: http://id3.org/Lyrics3
      http://id3.org/Lyrics3v2
 """
 def getLyrics3(filename):
-    f = file(filename, "r")
+    f = xbmcvfs.File(filename)
     f.seek(-128-9, os.SEEK_END)
     buf = f.read(9)
     if (buf != "LYRICS200" and buf != "LYRICSEND"):

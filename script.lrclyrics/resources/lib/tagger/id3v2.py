@@ -13,6 +13,7 @@ from tagger.utility import *
 from tagger.debug import *
 
 import os, struct, sys, types, tempfile, math
+import xbmcvfs
 
 class ID3v2:
     """
@@ -62,16 +63,11 @@ class ID3v2:
         if version not in self.supported:
             raise ID3ParameterException("version %s not valid" % str(version))
 
-        if not os.path.exists(filename):
+        if not xbmcvfs.exists(filename):
             raise ID3ParameterException("filename %s not valid" % filename)
         
-        try:
-          self.f = open(filename, 'rb+')
-          self.read_only = False
-        except IOError, (errno, strerror):
-            if errno == 13: # permission denied
-                self.f = open(filename, 'rb')
-                self.read_only = True
+        self.f = xbmcvfs.File(filename)
+        self.read_only = True
 
         self.filename = filename
 
@@ -103,7 +99,7 @@ class ID3v2:
     
     # ---------------------------------------------------------
     def tag_exists(self):
-        self.f.seek(0)
+        self.f.seek(0, 0)
         if self.f.read(3) == 'ID3':
             return True
         return False
@@ -115,12 +111,12 @@ class ID3v2:
 
         @todo: dump footer and extension header as well
         """
-        old_pos = self.f.tell()
+        #old_pos = self.f.tell()
         output = ''
         if self.tag["size"]:
-            self.f.seek(0)
+            self.f.seek(0, 0)
             output = self.f.read(ID3V2_FILE_HEADER_LENGTH + self.tag["size"])
-            self.f.seek(old_pos)
+            #self.f.seek(old_pos, 0)
             
         return output
 
@@ -196,7 +192,7 @@ class ID3v2:
         Parse Header of the file
 
         """
-        self.f.seek(0)
+        self.f.seek(0, 0)
         data = self.f.read(ID3V2_FILE_HEADER_LENGTH)
         if len(data) != ID3V2_FILE_HEADER_LENGTH:
             raise ID3HeaderInvalidException("ID3 tag header is incomplete")
@@ -234,7 +230,7 @@ class ID3v2:
         """ Parse Extension Header """
 
         # seek to the extension header position
-        self.f.seek(ID3V2_FILE_HEADER_LENGTH)
+        self.f.seek(ID3V2_FILE_HEADER_LENGTH, 0)
         data = self.f.read(ID3V2_FILE_EXTHEADER_LENGTH)
         extsize, flagbytes = struct.unpack("!4sB", data)
         extsize = unsyncsafe(extsize)
@@ -356,13 +352,13 @@ class ID3v2:
         
     # ---------------------------------------------------------     
     def commit_to_file(self, filename):
-        newf = open(filename, 'wb+')
+        newf = xbmcvfs.File(filename, 'w')
         framesstring = ''.join(map(lambda x: x.output(), self.frames))
         footerstring = ''
         extstring = ''
         
         # backup existing mp3 data 
-        self.f.seek(self.mp3_data_offset())
+        self.f.seek(self.mp3_data_offset(), 0)
         t = tempfile.TemporaryFile()
         buf = self.f.read(1024)
         while buf:
@@ -378,7 +374,7 @@ class ID3v2:
         newf.write(framesstring)
         newf.write('\x00' * ID3V2_FILE_DEFAULT_PADDING)
         newf.write(footerstring)
-        t.seek(0)
+        t.seek(0, 0)
         buf = t.read(1024)
         while buf:
             newf.write(buf)
@@ -419,7 +415,7 @@ class ID3v2:
                                                   ID3V2_FILE_DEFAULT_PADDING)
             
             # backup existing mp3 data 
-            self.f.seek(self.mp3_data_offset())
+            self.f.seek(self.mp3_data_offset(), 0)
             t = tempfile.TemporaryFile()
             buf = self.f.read(1024)
             while buf:
@@ -429,7 +425,7 @@ class ID3v2:
             # write to a new file
             if not pretend:
                 self.f.close()
-                self.f = open(self.filename, 'wb+')
+                self.f = xbmcvfs.File(self.filename, 'w')
                 self.f.write(headerstring)
                 self.f.write(extstring)
                 self.f.write(framesstring)
@@ -437,7 +433,7 @@ class ID3v2:
                 self.f.write(footerstring)
                 
                 # write mp3 data to new file
-                t.seek(0)
+                t.seek(0, 0)
                 buf = t.read(1024)
                 while buf:
                     self.f.write(buf)
@@ -452,7 +448,7 @@ class ID3v2:
         else:
             headerstring = self.construct_header(self.tag["size"])
             if not pretend:
-                self.f.seek(0)
+                self.f.seek(0, 0)
                 self.f.write(headerstring)
                 self.f.write(extstring)
                 self.f.write(framesstring)
