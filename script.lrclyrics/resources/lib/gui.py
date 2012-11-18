@@ -5,6 +5,7 @@ import thread
 import xbmc, xbmcgui, xbmcvfs
 from threading import Timer
 from utilities import *
+from embedlrc import *
 
 __scriptname__ = sys.modules[ "__main__" ].__scriptname__
 __version__    = sys.modules[ "__main__" ].__version__
@@ -83,22 +84,28 @@ class GUI( xbmcgui.WindowXMLDialog ):
         self.getControl( 200 ).setLabel( "" )
         self.menu_items = []
 
-        lyrics = self.get_lyrics_from_file2()
-        if ( lyrics == "" ):
-            lyrics = self.get_lyrics_from_file( artist, song )
-        if ( lyrics != "" ):
+        lyrics =  getEmbedLyrics(xbmc.Player().getPlayingFile().decode("utf-8"))
+        if ( lyrics ):
             self.show_lyrics( lyrics )
             self.getControl( 200 ).setEnabled( False )
-            self.getControl( 200 ).setLabel( __language__( 30000 ) )
+            self.getControl( 200 ).setLabel( __language__( 30002 ) )
         else:
-            self.getControl( 200 ).setEnabled( True )
-            self.getControl( 200 ).setLabel( self.scraper_title )
-            lyrics = self.LyricsScraper.get_lyrics( artist, song )
+            lyrics = self.get_lyrics_from_file2()
+            if ( lyrics == "" ):
+                lyrics = self.get_lyrics_from_file( artist, song )
+            if ( lyrics != "" ):
+                self.show_lyrics( lyrics )
+                self.getControl( 200 ).setEnabled( False )
+                self.getControl( 200 ).setLabel( __language__( 30000 ) )
+            else:
+                self.getControl( 200 ).setEnabled( True )
+                self.getControl( 200 ).setLabel( self.scraper_title )
+                lyrics = self.LyricsScraper.get_lyrics( artist, song )
 
-            if ( isinstance( lyrics, basestring ) ):
-                self.show_lyrics( lyrics, True )
-            elif ( isinstance( lyrics, list ) and lyrics ):
-                self.show_choices( lyrics )
+                if ( isinstance( lyrics, basestring ) ):
+                    self.show_lyrics( lyrics, True )
+                elif ( isinstance( lyrics, list ) and lyrics ):
+                    self.show_choices( lyrics )
 
     def get_lyrics_from_list( self, item ):
         lyrics = self.LyricsScraper.get_lyrics_from_list( self.menu_items[ item ] )
