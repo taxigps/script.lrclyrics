@@ -103,7 +103,7 @@ def get_settings():
 
 def get_textfile(filepath):
     try:
-        file = open( filepath, "r" )
+        file = open( filepath, "rb" )
         data = file.read()
         file.close()
         # Detect text encoding
