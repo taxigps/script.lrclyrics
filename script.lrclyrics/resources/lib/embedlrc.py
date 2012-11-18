@@ -1,11 +1,18 @@
 import os
+import chardet
 from tagger import *
 
 def getEmbedLyrics(filename):
     lyrics = getLyrics3(filename)
     if (not lyrics):
         lyrics = getID3Lyrics(filename)
-    return lyrics
+    if (lyrics):
+        enc = chardet.detect(lyrics)
+        if (enc['encoding'] == 'utf-8'):
+            return lyrics
+        else:
+            return unicode( lyrics, enc['encoding'] ).encode( "utf-8")
+    return None
 
 """
 Get LRC lyrics embed with Lyrics3/Lyrics3V2 format
