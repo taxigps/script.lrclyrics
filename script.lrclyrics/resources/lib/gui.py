@@ -113,36 +113,24 @@ class GUI( xbmcgui.WindowXMLDialog ):
         self.show_lyrics( lyrics, True )
 
     def get_lyrics_from_file( self, artist, song ):
-        try:
-            xbmc.sleep( 60 )
-            if ( self.settings[ "artist_folder" ] ):
-                self.song_path = unicode( os.path.join( self.settings[ "lyrics_path" ], artist.replace( "\\", "_" ).replace( "/", "_" ), song.replace( "\\", "_" ).replace( "/", "_" ) + ".lrc" ), "utf-8" )
-            else:
-                self.song_path = unicode( os.path.join( self.settings[ "lyrics_path" ], artist.replace( "\\", "_" ).replace( "/", "_" ) + " - " + song.replace( "\\", "_" ).replace( "/", "_" ) + ".lrc" ), "utf-8" )
-            lyrics_file = open( self.song_path, "r" )
-            lyrics = lyrics_file.read()
-            lyrics_file.close()
-            return lyrics
-        except IOError:
-            return ""
+        xbmc.sleep( 60 )
+        if ( self.settings[ "artist_folder" ] ):
+            self.song_path = unicode( os.path.join( self.settings[ "lyrics_path" ], artist.replace( "\\", "_" ).replace( "/", "_" ), song.replace( "\\", "_" ).replace( "/", "_" ) + ".lrc" ), "utf-8" )
+        else:
+            self.song_path = unicode( os.path.join( self.settings[ "lyrics_path" ], artist.replace( "\\", "_" ).replace( "/", "_" ) + " - " + song.replace( "\\", "_" ).replace( "/", "_" ) + ".lrc" ), "utf-8" )
+        return get_textfile( self.song_path )
 
     def get_lyrics_from_file2( self ):
-        try:
-            xbmc.sleep( 60 )
-            path = xbmc.Player().getPlayingFile()
-            dirname = os.path.dirname(path)
-            basename = os.path.basename(path)
-            filename = basename.rsplit( ".", 1 )[ 0 ]
-            if ( self.settings[ "subfolder" ] ):
-                self.song_path = unicode( os.path.join( dirname, self.settings[ "subfolder_name" ], filename + ".lrc" ), "utf-8" )
-            else:
-                self.song_path = unicode( os.path.join( dirname, filename + ".lrc" ), "utf-8" )
-            lyrics_file = open( self.song_path, "r" )
-            lyrics = lyrics_file.read()
-            lyrics_file.close()
-            return lyrics
-        except IOError:
-            return ""
+        xbmc.sleep( 60 )
+        path = xbmc.Player().getPlayingFile()
+        dirname = os.path.dirname(path)
+        basename = os.path.basename(path)
+        filename = basename.rsplit( ".", 1 )[ 0 ]
+        if ( self.settings[ "subfolder" ] ):
+            self.song_path = unicode( os.path.join( dirname, self.settings[ "subfolder_name" ], filename + ".lrc" ), "utf-8" )
+        else:
+            self.song_path = unicode( os.path.join( dirname, filename + ".lrc" ), "utf-8" )
+        return get_textfile( self.song_path )
 
     def save_lyrics_to_file( self, lyrics ):
         try:
